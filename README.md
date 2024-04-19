@@ -20,6 +20,46 @@ As per the notes from the linuxserver.io team, a random generator for the admin 
 
 ![image](https://tonypottier.com/wp-content/uploads/2024/01/qbittorrentlog.png)
 
+### Example: AirVPN
+
+A typical docker-compose to AirVPN, using OpenVPN and a connection to a Netherlands server should like below. Note that the gluetun configuration would be place in a subfolder where the docker-compose file resides.
+
+```yaml
+version: "3"
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8080:8080 # Qbittorent
+    volumes:
+      - ./gluetun:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=airvpn
+      - VPN_TYPE=openvpn
+      - SERVER_COUNTRIES=Netherlands
+      - UPDATER_PERIOD=
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - WEBUI_PORT=8080
+    volumes:
+      - ./qbittorrent/config:/config
+      - ./qbittorrent/downloads:/downloads
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+```
+
+In the `./gluetun` folder, the private key `./gluetun/client.key` and client certificate `./gluetun/client.crt` should be populated by the values obtained from your VPN provider. In the case of AirVPN, this would be under Client Area/Config Generator. Pick OpenVPN UDP/Linux and it'll generate a ovpn file containing both keys that should be copy/pasted in their respective Gluetun `client.key` and `client.crt` files. As this is very provider specific, you should refer to the excellent [Gluetun documentation](https://github.com/qdm12/gluetun-wiki) and to your VPN provider for more details.
+
 # Note: configure Qbittorent to bind to VPN
 
 In the Qbittorent client, you should make sure that you are only allowing connection from the `tun` network interface. To do this, you need to bind Qbittorent to the `tun` network interface. Effectively, Qbittorent will not send network packets should the VPN die. 
