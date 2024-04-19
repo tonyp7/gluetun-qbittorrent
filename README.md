@@ -1,4 +1,4 @@
-# Containerized qBittorrent with a VPN
+# Containerized qBittorrent with Gluetun VPN Client
 
 This repository demonstrates how you can combine two popular Docker images together:
  - [Gluetun VPN client](https://github.com/qdm12/gluetun) Lightweight swiss-knife-like VPN client to multiple VPN service providers
@@ -20,9 +20,15 @@ As per the notes from the linuxserver.io team, a random generator for the admin 
 
 ![image](https://tonypottier.com/wp-content/uploads/2024/01/qbittorrentlog.png)
 
+# Note: configure Qbittorent to bind to VPN
+
+In the Qbittorent client, you should make sure that you are only allowing connection from the `tun` network interface. To do this, you need to bind Qbittorent to the `tun` network interface. Effectively, Qbittorent will not send network packets should the VPN die. 
+
+![image](https://tonypottier.com/wp-content/uploads/2024/01/qbittorrentbindtonetworkinterface.png)
+
 # Note: confirm you are connect to a VPN
 
-From within the qBittorent container, you can execute:
+From within the qBittorent container, you can run the following command:
 
 ```console
 curl -L https://ipleak.net/json
@@ -59,9 +65,5 @@ This should output a json similar to this:
     "query_date": 1705033492
 }
 ```
+If it returns the VPN public IP, that means the configuration is successful.
 
-# Note: configure Qbittorent to bind to VPN
-
-In the Qbittorent client, you should make sure that you are only allowing connection from the `tun` network interface. This will effectively act as a killswitch if the VPN connection dies.
-
-![image](https://tonypottier.com/wp-content/uploads/2024/01/qbittorrentbindtonetworkinterface.png)
